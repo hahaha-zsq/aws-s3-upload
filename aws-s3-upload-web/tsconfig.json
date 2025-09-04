@@ -1,7 +1,57 @@
 {
-  "files": [],
+  "compilerOptions": {
+    "types": ["vite/client"],
+    "typeRoots": ["node_modules/@types"],
+    // 指定 ECMAScript 目标版本: 'ES3' (default), 'ES5', 'ES6'/'ES2015', 'ES2016', 'ES2017', or 'ESNEXT'
+    "target": "ES2022",
+    "useDefineForClassFields": true,
+    // 指定要包含在编译中的库文件
+    "lib": [
+      "ES2020",
+      "DOM",
+      "DOM.Iterable"
+    ],
+    // 指定生成哪个模块系统代码，如 'commonjs', 'amd', 'system', 'umd', 'es6', 'es2020', 'esnext'。
+    "module": "ESNext",
+    "skipLibCheck": true,
+    /* Bundler mode */
+    // 选择模块解析策略
+    "moduleResolution": "bundler",
+    // 允许编译 javascript 文件
+    "allowJs": true,
+    // 报告 javascript 文件中的错误
+    "checkJs": true,
+    "resolveJsonModule": true,
+    // 将每个文件做为单独的模块 （与 'ts.transpileModule' 类似）
+    "isolatedModules": true,
+    // 不生成输出文件(即编译时代码不将tsx文件变成js)
+    "noEmit": true,
+    // 指定 jsx 代码的生成: 'preserve', 'react-native', or 'react'
+    "jsx": "react-jsx",
+    /* Linting */
+    // 启用所有严格类型检查选项，不允许隐式any类型
+    "strict": true,
+    // 有未使用的变量时，抛出错误
+    "noUnusedLocals": true,
+    // 有未使用的参数时，抛出错误
+    "noUnusedParameters": true,
+    // 报告 switch 语句的 fallthrough 错误。（即，不允许 switch 的 case 语句贯穿）
+    "noFallthroughCasesInSwitch": true,
+    // baseUrl 的作用是设置一个基础路径，使得在 import 语句中使用的相对路径能够相对于这个基础路径进行解析
+    "baseUrl": "./",
+    // paths 配置项允许你为模块定义别名，这样你就可以在 import 语句中使用这些别名，而不是使用模块的实际路径
+    "paths": {
+      "@/*": [
+        "src/*"
+      ]
+    }
+  },
+  "include": [
+    "src"
+  ],
   "references": [
-    { "path": "./tsconfig.app.json" },
-    { "path": "./tsconfig.node.json" }
+    {
+      "path": "./tsconfig.node.json"
+    }
   ]
 }
