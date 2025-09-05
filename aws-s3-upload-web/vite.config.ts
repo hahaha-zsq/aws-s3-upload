@@ -1,7 +1,9 @@
 import {defineConfig, loadEnv} from 'vite'
 import path from "path";
 import vue from '@vitejs/plugin-vue'
-
+import AutoImport from 'unplugin-auto-import/vite'
+import Components from 'unplugin-vue-components/vite'
+import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
 // https://vitejs.dev/config/
 export default defineConfig(({mode}) => {
     // 根据当前工作目录中的 `mode` 加载 .env 文件设置第三个参数为 '' 来加载所有环境变量
@@ -14,6 +16,12 @@ export default defineConfig(({mode}) => {
     return {
         plugins: [
             vue(),
+            AutoImport({
+                resolvers: [ElementPlusResolver()],
+            }),
+            Components({
+                resolvers: [ElementPlusResolver()],
+            })
         ],
         resolve: {
             alias: {

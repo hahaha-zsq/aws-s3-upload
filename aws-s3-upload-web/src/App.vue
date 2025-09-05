@@ -1,30 +1,24 @@
 <script setup lang="ts">
-import HelloWorld from './components/HelloWorld.vue'
+import { ref } from 'vue'
+// import FileTable from './components/FileTable.vue'
+// import UploadModal from './components/UploadModal.vue'
+
+const visible = ref(false)
 </script>
 
 <template>
-  <div>
-    <a href="https://vite.dev" target="_blank">
-      <img src="/vite.svg" class="logo" alt="Vite logo" />
-    </a>
-    <a href="https://vuejs.org/" target="_blank">
-      <img src="./assets/vue.svg" class="logo vue" alt="Vue logo" />
-    </a>
+  <div style="margin-bottom: 20px; text-align: left">
+    <el-button type="primary" @click="visible = true">上传文件</el-button>
   </div>
-  <HelloWorld msg="Vite + Vue" />
+
+<!--  <FileTable />-->
+<!--  <UploadModal v-model:visible="visible" />-->
 </template>
 
-<style scoped>
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.vue:hover {
-  filter: drop-shadow(0 0 2em #42b883aa);
+<style>
+#app {
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
 }
 </style>
