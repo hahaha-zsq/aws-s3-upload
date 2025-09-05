@@ -26,7 +26,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
+import java.util.Collections;
 
 @Slf4j
 @Service
@@ -69,6 +69,9 @@ public class SysUploadTaskServiceImpl extends ServiceImpl<SysUploadTaskMapper, S
                 return handleUploadingTask(sysUploadTask, taskInfoVO);
             default: // 未上传 需要对文件进行分片初始化
                 taskInfoVO.setCode(ResultCodeEnum.NOT_UPLOADED.getCode());
+                taskInfoVO.setExitPartList(Collections.emptyList());
+                taskInfoVO.setUploadId("");
+                taskInfoVO.setUrl("");
                 return taskInfoVO;
         }
     }
@@ -147,6 +150,20 @@ public class SysUploadTaskServiceImpl extends ServiceImpl<SysUploadTaskMapper, S
         return uploadId;
     }
 
+    @Override
+    public String mergeMultipartUpload(String md5) {
+        String url ="";
+                SysUploadTask sysUploadTask = getOne(new LambdaQueryWrapper<SysUploadTask>()
+                .eq(SysUploadTask::getFileIdentifier, md5));
+        CompleteMultipartUploadResult completeMultipartUploadResult = amazonS3Template.completeMultipartUpload(sysUploadTask.getObjectKey(), sysUploadTask.getUploadId());
+        if (!ObjectUtils.isEmpty(completeMultipartUploadResult)) {
+             url = amazonS3Template.getGatewayUrl(sysUploadTask.getObjectKey());
+             sysUploadTask.setStatus((byte) 1);
+             updateById(sysUploadTask);
+        }
+        return url;
+    }
+
 
     /**
      * 处理已完成的上传任务
@@ -155,6 +172,7 @@ public class SysUploadTaskServiceImpl extends ServiceImpl<SysUploadTaskMapper, S
         taskInfoVO.setCode(ResultCodeEnum.UPLOAD_SUCCESS.getCode());
         String gatewayUrl = amazonS3Template.getGatewayUrl(sysUploadTask.getBucketName(), sysUploadTask.getObjectKey());
         taskInfoVO.setUrl(gatewayUrl);
+        taskInfoVO.setExitPartList(Collections.emptyList());
         taskInfoVO.setUploadId(sysUploadTask.getUploadId());
         return taskInfoVO;
     }
@@ -170,11 +188,15 @@ public class SysUploadTaskServiceImpl extends ServiceImpl<SysUploadTaskMapper, S
                     sysUploadTask.getObjectKey(),
                     sysUploadTask.getUploadId());
             taskInfoVO.setCode(ResultCodeEnum.UPLOADING.getCode());
+            taskInfoVO.setUrl("");
             taskInfoVO.setExitPartList(partListing.getParts());
             taskInfoVO.setUploadId(sysUploadTask.getUploadId());
         } catch (Exception e) {
             // 如果获取分片信息失败，返回未上传状态
             taskInfoVO.setCode(ResultCodeEnum.NOT_UPLOADED.getCode());
+            taskInfoVO.setUrl("");
+            taskInfoVO.setUploadId("");
+            taskInfoVO.setExitPartList(Collections.emptyList());
         }
         return taskInfoVO;
     }

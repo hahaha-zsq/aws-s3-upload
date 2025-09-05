@@ -73,4 +73,11 @@ public class UploadController {
             , @RequestParam String uploadId, @RequestParam String objectName, @RequestParam int partNumber) throws Exception {
         return Result.ok(iSysUploadTaskService.uploadPart(file, uploadId, objectName, partNumber));
     }
+
+
+    @PostMapping("/multipart/merge/{md5}")
+    public Result<String> mergeMultipartUpload(@PathVariable String md5) {
+        return Result.ok(iSysUploadTaskService.mergeMultipartUpload(md5));
+    }
+
 }
