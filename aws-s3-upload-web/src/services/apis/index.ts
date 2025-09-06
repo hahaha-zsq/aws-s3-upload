@@ -3,34 +3,34 @@
  */
 import axios from 'axios'
 import config from '@/config'
-import type { ResponseType } from '../index'
-import type { FilesType, TaskInfoVO, UploadFileInfoType } from './typing'
+import type {ResponseType} from '../index'
+import type {FilesType, TaskInfoVO} from './typing'
 
 // 创建axios实例
 const service = axios.create({
-  baseURL: config.baseApi,
-  timeout: 60000
+    baseURL: config.baseApi,
+    timeout: 60000
 })
 
 // 请求拦截器
 service.interceptors.request.use(
-  (config) => {
-    // 可以在这里添加token等认证信息
-    return config
-  },
-  (error) => {
-    return Promise.reject(error)
-  }
+    (config) => {
+        // 可以在这里添加token等认证信息
+        return config
+    },
+    (error) => {
+        return Promise.reject(error)
+    }
 )
 
 // 响应拦截器
 service.interceptors.response.use(
-  (response) => {
-    return response.data
-  },
-  (error) => {
-    return Promise.reject(error)
-  }
+    (response) => {
+        return response.data
+    },
+    (error) => {
+        return Promise.reject(error)
+    }
 )
 
 /**
@@ -39,7 +39,7 @@ service.interceptors.response.use(
  * @returns 任务信息
  */
 export const checkFileByMd5 = (md5: string): Promise<ResponseType<TaskInfoVO>> => {
-  return service.get(`/bunUpload/multipart/check/${md5}`)
+    return service.get(`/bunUpload/multipart/check/${md5}`)
 }
 
 /**
@@ -48,13 +48,13 @@ export const checkFileByMd5 = (md5: string): Promise<ResponseType<TaskInfoVO>> =
  * @returns 上传ID
  */
 export const initMultPartFile = (params: {
-  fileIdentifier: string
-  totalSize: number
-  chunkNum: number
-  chunkSize: number
-  fileName: string
+    fileIdentifier: string
+    totalSize: number
+    chunkNum: number
+    chunkSize: number
+    fileName: string
 }): Promise<ResponseType<string>> => {
-  return service.post('/bunUpload/multipart/init', params)
+    return service.post('/bunUpload/multipart/init', params)
 }
 
 /**
@@ -63,7 +63,7 @@ export const initMultPartFile = (params: {
  * @returns 合并结果
  */
 export const mergeFileByMd5 = (md5: string): Promise<ResponseType<string>> => {
-  return service.post(`/bunUpload/multipart/merge/${md5}`)
+    return service.post(`/bunUpload/multipart/merge/${md5}`)
 }
 
 /**
@@ -72,13 +72,13 @@ export const mergeFileByMd5 = (md5: string): Promise<ResponseType<string>> => {
  * @returns 上传结果
  */
 export const uploadSingleFile = (file: File): Promise<ResponseType<string>> => {
-  const formData = new FormData()
-  formData.append('file', file)
-  return service.post('/bunUpload/singleUpload', formData, {
-    headers: {
-      'Content-Type': 'multipart/form-data'
-    }
-  })
+    const formData = new FormData()
+    formData.append('file', file)
+    return service.post('/bunUpload/singleUpload', formData, {
+        headers: {
+            'Content-Type': 'multipart/form-data'
+        }
+    })
 }
 
 /**
@@ -89,12 +89,12 @@ export const uploadSingleFile = (file: File): Promise<ResponseType<string>> => {
  * @returns 上传结果
  */
 export const uploadPart = (file: File, uploadId: string, partNumber: number): Promise<ResponseType<any>> => {
-  const formData = new FormData()
-  formData.append('file', file)
-  formData.append('uploadId', uploadId)
-  formData.append('partNumber', partNumber.toString())
-  console.log(formData)
-  return service.post('/bunUpload/multipart/uploadPart', formData)
+    const formData = new FormData()
+    formData.append('file', file)
+    formData.append('uploadId', uploadId)
+    formData.append('partNumber', partNumber.toString())
+    console.log(formData)
+    return service.post('/bunUpload/multipart/uploadPart', formData)
 }
 
 /**
@@ -103,23 +103,8 @@ export const uploadPart = (file: File, uploadId: string, partNumber: number): Pr
  * @returns 文件列表
  */
 export const fetchFileList = (fileName?: string): Promise<ResponseType<FilesType[]>> => {
-  const params = fileName ? { fileName } : {}
-  return service.get('/bunUpload/files', { params })
-}
-
-/**
- * 分片下载文件
- * @param fileId 文件ID
- * @param range 范围请求头
- * @returns 文件分片数据
- */
-export const chunkDownloadFile = (fileId: number, range: string): Promise<Blob> => {
-  return service.get(`/bunUpload/download/${fileId}`, {
-    headers: {
-      Range: range
-    },
-    responseType: 'blob'
-  })
+    const params = fileName ? {fileName} : {}
+    return service.get('/bunUpload/files', {params})
 }
 
 /**
@@ -128,5 +113,5 @@ export const chunkDownloadFile = (fileId: number, range: string): Promise<Blob> 
  * @returns 删除结果
  */
 export const deleteFile = (fileId: number): Promise<ResponseType<string>> => {
-  return service.delete(`/bunUpload/files/${fileId}`)
+    return service.delete(`/bunUpload/files/${fileId}`)
 }

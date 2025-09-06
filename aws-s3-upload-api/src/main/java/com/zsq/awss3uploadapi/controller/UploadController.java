@@ -27,7 +27,12 @@ public class UploadController {
     final AmazonS3Template amazonS3Template;
     final ISysUploadTaskService iSysUploadTaskService;
 
-
+    /**
+     * 单文件上传
+     *
+     * @param file 文件
+     * @return 文件上传结果
+     */
     @PostMapping("/singleUpload")
     public Result<?> uploadFiles(@RequestParam("file") MultipartFile file) throws IOException {
         String fileName = file.getOriginalFilename();
@@ -66,14 +71,26 @@ public class UploadController {
         return Result.ok(iSysUploadTaskService.initMultiPartFile(initTaskParamDTO));
     }
 
-
+    /**
+     * 上传分片
+     *
+     * @param file      文件
+     * @param uploadId  上传ID
+     * @param partNumber 分片编号
+     * @return 上传结果
+     */
     @PostMapping("/multipart/uploadPart")
-    public Result<?> preSignUploadUrl(@RequestParam(value = "file") MultipartFile file
+    public Result<?> uploadPart(@RequestParam(value = "file") MultipartFile file
             , @RequestParam String uploadId, @RequestParam int partNumber) throws Exception {
         return Result.ok(iSysUploadTaskService.uploadPart(file, uploadId, partNumber));
     }
 
-
+    /**
+     * 合并分片
+     *
+     * @param md5 文件md5
+     * @return 合并结果
+     */
     @PostMapping("/multipart/merge/{md5}")
     public Result<String> mergeMultipartUpload(@PathVariable String md5) {
         return Result.ok(iSysUploadTaskService.mergeMultipartUpload(md5));
