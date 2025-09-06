@@ -1,31 +1,20 @@
 <script setup lang="ts">
 import { reactive, onMounted, ref, computed } from 'vue'
-import { convertFileSizeUnit } from '../utils/file/file'
-import { chunkDownloadFile, fetchFileList } from '../services/apis'
-import type { FilesType } from '../services/apis/typing'
+import { convertFileSizeUnit } from '@/utils/file/file'
+import { fetchFileList, deleteFile } from '@/services'
+import type { FilesType } from '@/services/apis/typing'
+import config from '@/config'
 
-const CHUNK_SIZE = 1024 * 1024 * 5
+type FileDataType = FilesType
 
-type DownloadStatus = {
-  progress?: number
-  status?: 'downloading' | 'pause' | 'error'
-}
-type FileDataType = FilesType & DownloadStatus
-
-const state = reactive<{ dataSource: FileDataType[]; blobRef: Map<number, BlobPart[]> }>({
-  dataSource: [],
-  blobRef: new Map<number, BlobPart[]>()
+const state = reactive<{ dataSource: FileDataType[] }>({
+  dataSource: []
 })
 
 const searchQuery = ref('')
 
 const filteredFileList = computed(() => {
-  if (!searchQuery.value) {
-    return state.dataSource
-  }
-  return state.dataSource.filter(file => 
-    file.originFileName.toLowerCase().includes(searchQuery.value.toLowerCase())
-  )
+  return state.dataSource
 })
 
 // 消息提示函数
@@ -41,6 +30,32 @@ const showMessage = (message: string, type: 'success' | 'error' | 'warning' = 's
       document.body.removeChild(messageEl)
     }, 300)
   }, 3000)
+}
+
+// 搜索文件
+const searchFiles = async () => {
+  try {
+    const { code, data } = await fetchFileList(searchQuery.value || undefined)
+    if (code === 200) {
+      state.dataSource = data
+      if (searchQuery.value) {
+        showMessage(`找到 ${data.length} 个匹配的文件`, 'success')
+      }
+    }
+  } catch (error) {
+    showMessage('搜索文件失败', 'error')
+  }
+}
+
+// 监听搜索框变化
+let searchTimeout: number | null = null
+const handleSearchInput = () => {
+  if (searchTimeout) {
+    clearTimeout(searchTimeout)
+  }
+  searchTimeout = setTimeout(() => {
+    searchFiles()
+  }, 500) // 防抖，500ms后执行搜索
 }
 
 onMounted(async () => {
@@ -65,62 +80,7 @@ const downloadFileByBlob = (blob: Blob, filename: string) => {
   window.URL.revokeObjectURL(url)
 }
 
-// 分片下载文件
-const downloadFile = async (record: FileDataType) => {
-  const index = state.dataSource.findIndex((item) => item.id === record.id)
-  state.dataSource[index].status = 'downloading'
-  state.dataSource[index].progress = 0
 
-  const totalChunks = Math.ceil(record.size / CHUNK_SIZE)
-  // 如果是暂停，根据已下载的，找到断点，偏移长度进行下载
-  const offset = state.blobRef.get(record.id)?.length || 0
-
-  try {
-    for (let i = offset; i < totalChunks; i++) {
-      // 暂停/错误 终止后续请求
-      if (state.dataSource[index].status !== 'downloading') return
-
-      const start = CHUNK_SIZE * i
-      let end = CHUNK_SIZE * (i + 1) - 1
-      if (end >= record.size) end = record.size - 1
-
-      const res = await chunkDownloadFile(record.id, `bytes=${start}-${end}`)
-      const currentDataBlob = state.blobRef.get(record.id) || []
-      // 记录当前数据的分片 blob
-      state.blobRef.set(record.id, [...currentDataBlob, res as unknown as BlobPart])
-      state.dataSource[index].progress = Math.floor(((i + 1) / totalChunks) * 100)
-    }
-
-    if (state.dataSource[index].status === 'downloading') {
-      state.dataSource[index].status = undefined
-      state.dataSource[index].progress = undefined
-      const blob = new Blob(state.blobRef.get(record.id))
-      downloadFileByBlob(blob, record.originFileName)
-      state.blobRef.delete(record.id)
-      showMessage('文件下载完成', 'success')
-    }
-  } catch (error) {
-    state.dataSource[index].status = 'error'
-    showMessage('下载失败', 'error')
-  }
-}
-
-// 暂停下载
-const pauseDownload = (record: FileDataType) => {
-  record.status = 'pause'
-}
-
-// 继续下载
-const resumeDownload = (record: FileDataType) => {
-  downloadFile(record)
-}
-
-// 取消下载
-const cancelDownload = (record: FileDataType) => {
-  record.status = undefined
-  record.progress = undefined
-  state.blobRef.delete(record.id)
-}
 
 // 获取文件扩展名
 const getFileExtension = (fileName: string): string => {
@@ -131,11 +91,51 @@ const getFileExtension = (fileName: string): string => {
 // 刷新文件列表
 const refreshList = async () => {
   try {
-    const { code, data } = await fetchFileList()
+    const { code, data } = await fetchFileList(searchQuery.value)
     if (code === 200) state.dataSource = data
     showMessage('文件列表已刷新', 'success')
   } catch (error) {
     showMessage('刷新文件列表失败', 'error')
+  }
+}
+
+// 删除文件
+const deleteFileHandler = async (record: FileDataType) => {
+  if (!confirm(`确定要删除文件 "${record.originFileName}" 吗？`)) {
+    return
+  }
+  
+  try {
+    const { code } = await deleteFile(record.id)
+    if (code === 200) {
+      // 从列表中移除已删除的文件
+      const index = state.dataSource.findIndex(item => item.id === record.id)
+      if (index > -1) {
+        state.dataSource.splice(index, 1)
+      }
+      showMessage('文件删除成功', 'success')
+    } else {
+      showMessage('文件删除失败', 'error')
+    }
+  } catch (error) {
+    showMessage('文件删除失败', 'error')
+  }
+}
+
+// 直接下载文件（使用后端下载URL）
+const directDownloadFile = (record: FileDataType) => {
+  try {
+    // 直接使用后端API地址进行下载
+    const link = document.createElement('a')
+    link.href = record.url
+    link.download = record.originFileName
+    link.target = '_blank'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    showMessage('开始下载文件', 'success')
+  } catch (error) {
+    showMessage('下载失败', 'error')
   }
 }
 </script>
@@ -164,11 +164,12 @@ const refreshList = async () => {
               <path d="m21 21-4.35-4.35"></path>
             </svg>
             <input 
-              v-model="searchQuery" 
-              type="text" 
-              placeholder="搜索文件名..."
-              class="search-input"
-            />
+          v-model="searchQuery" 
+          type="text" 
+          placeholder="搜索文件名..." 
+          class="search-input"
+          @input="handleSearchInput"
+        />
           </div>
           <button @click="refreshList" class="refresh-btn">
             <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -187,7 +188,6 @@ const refreshList = async () => {
         v-for="row in state.dataSource" 
         :key="row.id" 
         class="file-card"
-        :class="{ 'downloading': row.progress !== undefined }"
       >
         <div class="file-card-header">
           <div class="file-icon-wrapper">
@@ -200,11 +200,10 @@ const refreshList = async () => {
             <div class="file-type-badge">{{ getFileExtension(row.originFileName) }}</div>
           </div>
           <div class="file-actions">
-            <!-- 未开始下载或下载错误 -->
+            <!-- 直接下载按钮 -->
             <button
-              v-if="!row.status || row.status === 'error'"
               class="action-btn download-btn"
-              @click="downloadFile(row)"
+              @click="directDownloadFile(row)"
               :title="'下载 ' + row.originFileName"
             >
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -214,36 +213,20 @@ const refreshList = async () => {
               </svg>
             </button>
             
-            <!-- 下载中 -->
-            <template v-else-if="row.status === 'downloading'">
-              <button class="action-btn pause-btn" @click="pauseDownload(row)" title="暂停下载">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <rect x="6" y="4" width="4" height="16"></rect>
-                  <rect x="14" y="4" width="4" height="16"></rect>
-                </svg>
-              </button>
-              <button class="action-btn cancel-btn" @click="cancelDownload(row)" title="取消下载">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <line x1="18" y1="6" x2="6" y2="18"></line>
-                  <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
-              </button>
-            </template>
-            
-            <!-- 暂停状态 -->
-            <template v-else-if="row.status === 'pause'">
-              <button class="action-btn resume-btn" @click="resumeDownload(row)" title="继续下载">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <polygon points="5,3 19,12 5,21"></polygon>
-                </svg>
-              </button>
-              <button class="action-btn cancel-btn" @click="cancelDownload(row)" title="取消下载">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <line x1="18" y1="6" x2="6" y2="18"></line>
-                  <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
-              </button>
-            </template>
+            <!-- 删除按钮 -->
+            <button
+              class="action-btn delete-btn"
+              @click="deleteFileHandler(row)"
+              :title="'删除 ' + row.originFileName"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="3,6 5,6 21,6"></polyline>
+                <path d="m19,6v14a2,2 0 0,1 -2,2H7a2,2 0 0,1 -2,-2V6m3,0V4a2,2 0 0,1 2,-2h4a2,2 0 0,1 2,2v2"></path>
+                <line x1="10" y1="11" x2="10" y2="17"></line>
+                <line x1="14" y1="11" x2="14" y2="17"></line>
+              </svg>
+            </button>
+
           </div>
         </div>
         
@@ -266,25 +249,7 @@ const refreshList = async () => {
           </div>
         </div>
         
-        <!-- 下载进度 -->
-        <div v-if="row.progress !== undefined" class="download-progress">
-          <div class="progress-bar">
-            <div 
-              class="progress-fill" 
-              :class="{ 'progress-error': row.status === 'error' }"
-              :style="{ width: row.progress + '%' }"
-            >
-              <div class="progress-shine"></div>
-            </div>
-          </div>
-          <div class="progress-info">
-            <span class="progress-text">
-              {{ row.status === 'error' ? '下载失败' : 
-                  row.status === 'pause' ? '已暂停' : 
-                  '下载中' }} {{ row.progress }}%
-            </span>
-          </div>
-        </div>
+
       </div>
     </div>
     
@@ -490,8 +455,8 @@ const refreshList = async () => {
 
 .file-type-badge {
   position: absolute;
-  bottom: -6px;
-  right: -6px;
+  bottom: 0;
+  right: 0;
   background: #1890ff;
   color: white;
   font-size: 10px;
@@ -529,9 +494,25 @@ const refreshList = async () => {
 }
 
 .download-btn:hover:not(:disabled) {
-  background: #1890ff;
-  color: white;
-  transform: scale(1.05);
+  background: #bae7ff;
+}
+
+.chunk-download-btn {
+  background: #f6ffed;
+  color: #52c41a;
+}
+
+.chunk-download-btn:hover:not(:disabled) {
+  background: #d9f7be;
+}
+
+.delete-btn {
+  background: #fff2f0;
+  color: #ff4d4f;
+}
+
+.delete-btn:hover:not(:disabled) {
+  background: #ffccc7;
 }
 
 .pause-btn {

@@ -2,11 +2,11 @@
 import { ref, reactive, computed, watch, onMounted, onUnmounted } from 'vue'
 import pLimit from 'p-limit'
 
-import { convertFileSizeUnit, cutFile } from '../utils/file/file'
-import { checkFileByMd5, initMultPartFile, mergeFileByMd5, uploadPart } from '../services/apis'
-import { HttpCodeUploadEnum } from '../services'
-import type { UploadFileInfoType } from '../services/apis/typing'
-import { MerkleTree } from '../utils/file/MerkleTree'
+import { convertFileSizeUnit, cutFile } from '@/utils/file/file'
+import { checkFileByMd5, initMultPartFile, mergeFileByMd5, uploadPart } from '@/services'
+import { HttpCodeUploadEnum } from '@/services'
+import type { UploadFileInfoType } from '@/services/apis/typing'
+import { MerkleTree } from '@/utils/file/MerkleTree'
 
 const limit = pLimit(3)
 const CHUNK_SIZE = 1024 * 1024 * 5
@@ -1658,7 +1658,7 @@ const totalUploadSpeed = computed(() => {
 
 .file-item {
   display: flex;
-  align-items: flex-start;
+  align-items: stretch;
   gap: 16px;
   padding: 20px;
   background: white;
@@ -1724,8 +1724,8 @@ const totalUploadSpeed = computed(() => {
 
 .file-type-badge {
   position: absolute;
-  bottom: -4px;
-  right: -4px;
+  bottom: 0;
+  right: 0;
   background: #667eea;
   color: white;
   font-size: 0.625rem;
@@ -1739,6 +1739,9 @@ const totalUploadSpeed = computed(() => {
 .file-info {
   flex: 1;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
 .file-header {
@@ -1748,6 +1751,7 @@ const totalUploadSpeed = computed(() => {
   margin-bottom: 12px;
   gap: 16px;
   min-height: 2.8em;
+  flex-shrink: 0;
 }
 
 .file-name {
@@ -1840,7 +1844,8 @@ const totalUploadSpeed = computed(() => {
 }
 
 .progress-section {
-  margin-top: 12px;
+  margin-top: auto;
+  padding-top: 12px;
 }
 
 .progress-container {
@@ -1848,6 +1853,7 @@ const totalUploadSpeed = computed(() => {
   align-items: center;
   gap: 12px;
   margin-bottom: 8px;
+  width: 100%;
 }
 
 .progress-bar {
@@ -1857,6 +1863,7 @@ const totalUploadSpeed = computed(() => {
   border-radius: 4px;
   overflow: hidden;
   position: relative;
+  margin: 0;
 }
 
 .progress-fill {
@@ -1913,6 +1920,37 @@ const totalUploadSpeed = computed(() => {
   align-items: center;
   font-size: 0.75rem;
   color: #64748b;
+  margin-top: 4px;
+  width: 100%;
+}
+
+.file-meta {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 8px;
+  font-size: 0.875rem;
+  color: #64748b;
+  flex-wrap: wrap;
+}
+
+.meta-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.meta-item svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+.upload-speed-text {
+  color: #059669;
+  font-weight: 600;
 }
 
 .size-info {
@@ -1927,9 +1965,11 @@ const totalUploadSpeed = computed(() => {
 .file-actions {
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
+  align-items: center;
+  justify-content: flex-start;
   gap: 8px;
   flex-shrink: 0;
+  min-width: 80px;
 }
 
 .action-buttons {

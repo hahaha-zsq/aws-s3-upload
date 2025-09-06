@@ -99,10 +99,12 @@ export const uploadPart = (file: File, uploadId: string, partNumber: number): Pr
 
 /**
  * 获取文件列表
+ * @param fileName 文件名（可选，支持模糊查询）
  * @returns 文件列表
  */
-export const fetchFileList = (): Promise<ResponseType<FilesType[]>> => {
-  return service.get('/bunUpload/files')
+export const fetchFileList = (fileName?: string): Promise<ResponseType<FilesType[]>> => {
+  const params = fileName ? { fileName } : {}
+  return service.get('/bunUpload/files', { params })
 }
 
 /**
@@ -118,4 +120,13 @@ export const chunkDownloadFile = (fileId: number, range: string): Promise<Blob> 
     },
     responseType: 'blob'
   })
+}
+
+/**
+ * 删除文件
+ * @param fileId 文件ID
+ * @returns 删除结果
+ */
+export const deleteFile = (fileId: number): Promise<ResponseType<string>> => {
+  return service.delete(`/bunUpload/files/${fileId}`)
 }
