@@ -9,18 +9,15 @@ import com.zsq.awss3uploadapi.entity.vo.TaskInfoVO;
 import com.zsq.awss3uploadapi.service.ISysUploadTaskService;
 import com.zsq.winter.minio.service.AmazonS3Template;
 import lombok.RequiredArgsConstructor;
-import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.Valid;
 import java.io.IOException;
-import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
-import java.util.Map;
 
+@CrossOrigin
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/bunUpload")
@@ -70,8 +67,8 @@ public class UploadController {
 
     @PostMapping("/multipart/uploadPart")
     public Result<?> preSignUploadUrl(@RequestParam(value = "file") MultipartFile file
-            , @RequestParam String uploadId, @RequestParam String objectName, @RequestParam int partNumber) throws Exception {
-        return Result.ok(iSysUploadTaskService.uploadPart(file, uploadId, objectName, partNumber));
+            , @RequestParam String uploadId, @RequestParam int partNumber) throws Exception {
+        return Result.ok(iSysUploadTaskService.uploadPart(file, uploadId, partNumber));
     }
 
 

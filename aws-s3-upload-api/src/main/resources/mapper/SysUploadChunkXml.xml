@@ -1,17 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.zsq.awss3uploadapi.mapper.SysUploadChunkMapper">
-  <resultMap id="BaseResultMap" type="com.zsq.awss3uploadapi.entity.SysUploadChunk">
-    <!--@mbg.generated-->
-    <!--@Table sys_upload_chunk-->
-    <id column="id" jdbcType="BIGINT" property="id" />
-    <result column="task_id" jdbcType="BIGINT" property="taskId" />
-    <result column="part_number" jdbcType="INTEGER" property="partNumber" />
-    <result column="etag" jdbcType="VARCHAR" property="etag" />
-    <result column="created_at" jdbcType="TIMESTAMP" property="createdAt" />
-  </resultMap>
-  <sql id="Base_Column_List">
-    <!--@mbg.generated-->
-    id, task_id, part_number, etag, created_at
-  </sql>
 </mapper>

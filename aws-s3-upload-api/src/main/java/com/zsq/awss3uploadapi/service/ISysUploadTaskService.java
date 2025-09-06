@@ -10,7 +10,7 @@ import javax.validation.Valid;
 
 public interface ISysUploadTaskService extends IService<SysUploadTask>{
     TaskInfoVO checkFileByMd5 (String identifier);
-    boolean uploadPart(MultipartFile file, String uploadId, String objectName, int partNumber) throws Exception;
+    boolean uploadPart(MultipartFile file, String uploadId,  int partNumber) throws Exception;
     String initMultiPartFile(@Valid InitTaskParamDTO initTaskParamDTO);
 
     String mergeMultipartUpload(String md5);

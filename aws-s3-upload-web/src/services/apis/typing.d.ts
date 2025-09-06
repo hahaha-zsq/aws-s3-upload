@@ -1,38 +1,55 @@
-/** 查询该文件是否上传，已上传，返回上传信息 / 初始化分片入参 */
-export type UploadFileInfoType = {
-  /** 参考类型 UploadUrls */
+/**
+ * API 类型定义
+ */
+
+// 上传文件信息类型
+export interface UploadFileInfoType {
+  // 上传ID，用于分片上传
   uploadId?: string
-  originFileName: string
-  size: number
-  chunkCount: number // 分片数量
-  chunkSize: number
-  md5: string
+  // 原始文件名
+  originFileName?: string
+  // 文件大小（字节）
+  size?: number
+  // 分片大小（字节）
+  chunkSize?: number
+  // 分片数量
+  chunkCount?: number
+  // 文件MD5
+  md5?: string
+  // 文件内容类型
   contentType?: string
-  /** 该字段只会在秒传时返回文件地址 */
-  readonly url?: string
-  /** 已上传的分片索引，没有返回 null */
-  readonly listParts?: number[]
+  // 已上传的分片列表
+  exitPartList?: number[]
+  // 分片上传URL列表
+  urls?: string[]
 }
 
-/** 分片成功返回的分片地址，前端直接调用进行上传 */
-export type UploadUrls = {
-  uploadId: string
-  urls: string[]
+// 任务信息VO
+export interface TaskInfoVO {
+  // 状态码
+  code?: number
+  // 上传ID
+  uploadId?: string
+  // 已上传的分片列表
+  exitPartList?: number[]
+  // 对象名称
+  objectName?: string
+  // 文件URL
+  url?: string
 }
 
-/** 数据库文件列表 */
-export type FilesType = {
+// 文件列表类型
+export interface FilesType {
+  // 文件ID
   id: number
-  uploadId: string
-  md5: string
-  url: string
-  bucket: string
-  object: string
+  // 原始文件名
   originFileName: string
+  // 文件大小（字节）
   size: number
-  type: string
-  CHUNK_SIZE: number
-  chunkCount: number
-  isDelete: string
-  createTime: string
+  // 文件URL
+  url: string
+  // 上传时间
+  uploadTime: string
+  // 文件MD5
+  md5: string
 }

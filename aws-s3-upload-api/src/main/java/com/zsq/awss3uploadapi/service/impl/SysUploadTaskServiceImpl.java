@@ -23,7 +23,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.multipart.MultipartFile;
-
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Collections;
@@ -81,9 +80,12 @@ public class SysUploadTaskServiceImpl extends ServiceImpl<SysUploadTaskMapper, S
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public boolean uploadPart(MultipartFile file, String uploadId, String objectName, int partNumber) throws Exception {
-        // 1. 上传分片到 S3
-        UploadPartResult uploadPartResult = amazonS3Template.uploadPart(uploadId, objectName, partNumber, file);
+    public boolean uploadPart(MultipartFile file, String uploadId, int partNumber) throws Exception {
+
+         // 根据MD5查找上传任务
+         SysUploadTask sysUploadTask = getOne(new LambdaQueryWrapper<SysUploadTask>()
+                 .eq(SysUploadTask::getUploadId, uploadId));
+        UploadPartResult uploadPartResult = amazonS3Template.uploadPart(uploadId, sysUploadTask.getObjectKey(), partNumber, file);
         // 2. 保存分片信息（etag + partNumber）
         SysUploadChunk sysUploadChunk = SysUploadChunk.builder()
                 .uploadId(uploadId)
