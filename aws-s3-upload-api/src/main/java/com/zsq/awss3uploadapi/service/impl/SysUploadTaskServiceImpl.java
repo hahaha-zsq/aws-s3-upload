@@ -9,6 +9,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.zsq.awss3uploadapi.entity.SysUploadChunk;
 import com.zsq.awss3uploadapi.entity.SysUploadTask;
 import com.zsq.awss3uploadapi.entity.dto.InitTaskParamDTO;
+import com.zsq.awss3uploadapi.entity.vo.FileListVO;
 import com.zsq.awss3uploadapi.entity.vo.TaskInfoVO;
 import com.zsq.awss3uploadapi.enums.ResultCodeEnum;
 import com.zsq.awss3uploadapi.mapper.SysUploadTaskMapper;
@@ -23,9 +24,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.multipart.MultipartFile;
+
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -82,9 +86,9 @@ public class SysUploadTaskServiceImpl extends ServiceImpl<SysUploadTaskMapper, S
     @Transactional(rollbackFor = Exception.class)
     public boolean uploadPart(MultipartFile file, String uploadId, int partNumber) throws Exception {
 
-         // 根据MD5查找上传任务
-         SysUploadTask sysUploadTask = getOne(new LambdaQueryWrapper<SysUploadTask>()
-                 .eq(SysUploadTask::getUploadId, uploadId));
+        // 根据MD5查找上传任务
+        SysUploadTask sysUploadTask = getOne(new LambdaQueryWrapper<SysUploadTask>()
+                .eq(SysUploadTask::getUploadId, uploadId));
         UploadPartResult uploadPartResult = amazonS3Template.uploadPart(uploadId, sysUploadTask.getObjectKey(), partNumber, file);
         // 2. 保存分片信息（etag + partNumber）
         SysUploadChunk sysUploadChunk = SysUploadChunk.builder()
@@ -154,14 +158,14 @@ public class SysUploadTaskServiceImpl extends ServiceImpl<SysUploadTaskMapper, S
 
     @Override
     public String mergeMultipartUpload(String md5) {
-        String url ="";
-                SysUploadTask sysUploadTask = getOne(new LambdaQueryWrapper<SysUploadTask>()
+        String url = "";
+        SysUploadTask sysUploadTask = getOne(new LambdaQueryWrapper<SysUploadTask>()
                 .eq(SysUploadTask::getFileIdentifier, md5));
         CompleteMultipartUploadResult completeMultipartUploadResult = amazonS3Template.completeMultipartUpload(sysUploadTask.getObjectKey(), sysUploadTask.getUploadId());
         if (!ObjectUtils.isEmpty(completeMultipartUploadResult)) {
-             url = amazonS3Template.getGatewayUrl(sysUploadTask.getObjectKey());
-             sysUploadTask.setStatus((byte) 1);
-             updateById(sysUploadTask);
+            url = amazonS3Template.getGatewayUrl(sysUploadTask.getObjectKey());
+            sysUploadTask.setStatus((byte) 1);
+            updateById(sysUploadTask);
         }
         return url;
     }
@@ -177,6 +181,57 @@ public class SysUploadTaskServiceImpl extends ServiceImpl<SysUploadTaskMapper, S
         taskInfoVO.setExitPartList(Collections.emptyList());
         taskInfoVO.setUploadId(sysUploadTask.getUploadId());
         return taskInfoVO;
+    }
+
+    @Override
+    public List<FileListVO> getFileList(String fileName) {
+        // 查询所有已完成上传的文件（status = 1）
+        LambdaQueryWrapper<SysUploadTask> queryWrapper = new LambdaQueryWrapper<SysUploadTask>()
+                .eq(SysUploadTask::getStatus, (byte) 1)
+                .like(StrUtil.isNotBlank(fileName), SysUploadTask::getFileName, fileName)
+                .orderByDesc(SysUploadTask::getCreatedAt);
+
+        List<SysUploadTask> completedTasks = list(queryWrapper);
+
+        // 转换为FileListVO
+        return completedTasks.stream().map(task -> {
+            String url = amazonS3Template.getGatewayUrl(task.getObjectKey());
+            return FileListVO.builder()
+                    .id(task.getId())
+                    .originFileName(task.getFileName())
+                    .size(task.getTotalSize())
+                    .url(url)
+                    .uploadTime(task.getCreatedAt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")))
+                    .md5(task.getFileIdentifier())
+                    .build();
+        }).collect(Collectors.toList());
+    }
+
+    @Override
+    public boolean deleteFile(Long fileId) {
+        try {
+            // 根据ID查询文件信息
+            SysUploadTask uploadTask = getById(fileId);
+            if (uploadTask == null) {
+                log.warn("文件不存在，ID: {}", fileId);
+                return false;
+            }
+
+            // 从S3删除文件
+            amazonS3Template.removeObject(uploadTask.getObjectKey());
+
+            // 从数据库删除记录
+            boolean removed = removeById(fileId);
+
+            boolean remove = iSysUploadChunkService.remove(new LambdaQueryWrapper<SysUploadChunk>().eq(SysUploadChunk::getUploadId, uploadTask.getUploadId()));
+            if (removed && remove) {
+                log.info("文件删除成功，ID: {}, 文件名: {}", fileId, uploadTask.getFileName());
+            }
+            return removed && remove;
+        } catch (Exception e) {
+            log.error("删除文件失败，ID: {}", fileId, e);
+            return false;
+        }
     }
 
     /**

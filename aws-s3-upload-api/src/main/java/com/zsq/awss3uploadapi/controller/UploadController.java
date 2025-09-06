@@ -5,6 +5,7 @@ import cn.hutool.core.util.StrUtil;
 
 import com.zsq.awss3uploadapi.entity.Result;
 import com.zsq.awss3uploadapi.entity.dto.InitTaskParamDTO;
+import com.zsq.awss3uploadapi.entity.vo.FileListVO;
 import com.zsq.awss3uploadapi.entity.vo.TaskInfoVO;
 import com.zsq.awss3uploadapi.service.ISysUploadTaskService;
 import com.zsq.winter.minio.service.AmazonS3Template;
@@ -16,6 +17,7 @@ import javax.validation.Valid;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 @CrossOrigin
 @RequiredArgsConstructor
@@ -77,4 +79,28 @@ public class UploadController {
         return Result.ok(iSysUploadTaskService.mergeMultipartUpload(md5));
     }
 
+    /**
+     * 获取文件列表
+     * @param fileName 文件名（支持模糊查询）
+     * @return 文件列表
+     */
+    @GetMapping("/files")
+    public Result<List<FileListVO>> getFileList(@RequestParam(value = "fileName", required = false) String fileName) {
+        return Result.ok(iSysUploadTaskService.getFileList(fileName));
+    }
+
+    /**
+     * 删除文件
+     * @param fileId 文件ID
+     * @return 删除结果
+     */
+    @DeleteMapping("/files/{fileId}")
+    public Result<String> deleteFile(@PathVariable Long fileId) {
+        boolean success = iSysUploadTaskService.deleteFile(fileId);
+        if (success) {
+            return Result.build("文件删除成功", 200, "文件删除成功");
+        } else {
+            return Result.fail(400, "文件删除失败");
+        }
+    }
 }
