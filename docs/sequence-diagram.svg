@@ -1,0 +1,187 @@
+<svg width="1000" height="1400" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>
+      .title { font: bold 18px sans-serif; text-anchor: middle; fill: #2c3e50; }
+      .actor-box { fill: #3498db; stroke: #2980b9; stroke-width: 2; rx: 5; ry: 5; }
+      .actor-text { font: bold 12px sans-serif; text-anchor: middle; fill: white; }
+      .lifeline { stroke: #bdc3c7; stroke-width: 2; stroke-dasharray: 5,5; }
+      .message { stroke: #34495e; stroke-width: 2; fill: none; marker-end: url(#arrowhead); }
+      .return { stroke: #7f8c8d; stroke-width: 1; stroke-dasharray: 3,3; fill: none; marker-end: url(#arrowhead-return); }
+      .message-text { font: 11px sans-serif; fill: #2c3e50; }
+      .note { fill: #f1c40f; stroke: #f39c12; stroke-width: 1; rx: 3; ry: 3; }
+      .note-text { font: 10px sans-serif; fill: #8e44ad; }
+      .section { font: bold 14px sans-serif; fill: #e74c3c; }
+      .activation { fill: #ecf0f1; stroke: #bdc3c7; stroke-width: 1; }
+    </style>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#34495e" />
+    </marker>
+    <marker id="arrowhead-return" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#7f8c8d" />
+    </marker>
+  </defs>
+  
+  <!-- 标题 -->
+  <text x="500" y="30" class="title">断点续传和秒传时序图</text>
+  
+  <!-- 参与者 -->
+  <rect x="50" y="60" width="80" height="40" class="actor-box"/>
+  <text x="90" y="85" class="actor-text">用户</text>
+  
+  <rect x="200" y="60" width="100" height="40" class="actor-box"/>
+  <text x="250" y="85" class="actor-text">前端应用</text>
+  
+  <rect x="370" y="60" width="100" height="40" class="actor-box"/>
+  <text x="420" y="85" class="actor-text">后端API</text>
+  
+  <rect x="540" y="60" width="100" height="40" class="actor-box"/>
+  <text x="590" y="85" class="actor-text">AWS S3</text>
+  
+  <rect x="710" y="60" width="100" height="40" class="actor-box"/>
+  <text x="760" y="85" class="actor-text">数据库</text>
+  
+  <!-- 生命线 -->
+  <line x1="90" y1="100" x2="90" y2="1350" class="lifeline"/>
+  <line x1="250" y1="100" x2="250" y2="1350" class="lifeline"/>
+  <line x1="420" y1="100" x2="420" y2="1350" class="lifeline"/>
+  <line x1="590" y1="100" x2="590" y2="1350" class="lifeline"/>
+  <line x1="760" y1="100" x2="760" y2="1350" class="lifeline"/>
+  
+  <!-- 第一部分：文件选择和MD5计算 -->
+  <text x="50" y="140" class="section">1. 文件上传初始化</text>
+  
+  <!-- 用户选择文件 -->
+  <line x1="90" y1="160" x2="250" y2="160" class="message"/>
+  <text x="170" y="155" class="message-text">选择文件</text>
+  
+  <!-- 计算MD5 -->
+  <rect x="245" y="180" width="10" height="40" class="activation"/>
+  <rect x="180" y="200" width="140" height="30" class="note"/>
+  <text x="250" y="220" class="note-text">计算文件MD5哈希值</text>
+  
+  <!-- 第二部分：秒传检查 -->
+  <text x="50" y="260" class="section">2. 秒传检查流程</text>
+  
+  <!-- 检查文件是否存在 -->
+  <line x1="250" y1="280" x2="420" y2="280" class="message"/>
+  <text x="335" y="275" class="message-text">checkFileByMd5(md5)</text>
+  
+  <!-- 查询数据库 -->
+  <rect x="415" y="300" width="10" height="60" class="activation"/>
+  <line x1="420" y1="320" x2="760" y2="320" class="message"/>
+  <text x="590" y="315" class="message-text">查询文件记录</text>
+  
+  <line x1="760" y1="340" x2="420" y2="340" class="return"/>
+  <text x="590" y="335" class="message-text">返回文件信息</text>
+  
+  <!-- 秒传成功分支 -->
+  <line x1="420" y1="380" x2="250" y2="380" class="return"/>
+  <text x="335" y="375" class="message-text">文件已存在(秒传)</text>
+  
+  <line x1="250" y1="400" x2="90" y2="400" class="return"/>
+  <text x="170" y="395" class="message-text">上传完成</text>
+  
+  <!-- 第三部分：分片上传流程 -->
+  <text x="50" y="440" class="section">3. 分片上传流程</text>
+  
+  <!-- 文件不存在，开始分片上传 -->
+  <line x1="420" y1="460" x2="250" y2="460" class="return"/>
+  <text x="335" y="455" class="message-text">文件不存在</text>
+  
+  <!-- 文件分片 -->
+  <rect x="245" y="480" width="10" height="40" class="activation"/>
+  <rect x="180" y="500" width="140" height="30" class="note"/>
+  <text x="250" y="520" class="note-text">将文件分割为5MB分片</text>
+  
+  <!-- 初始化分片上传 -->
+  <line x1="250" y1="540" x2="420" y2="540" class="message"/>
+  <text x="335" y="535" class="message-text">initMultiPartFile()</text>
+  
+  <rect x="415" y="560" width="10" height="80" class="activation"/>
+  <line x1="420" y1="580" x2="590" y2="580" class="message"/>
+  <text x="505" y="575" class="message-text">创建分片上传任务</text>
+  
+  <line x1="590" y1="600" x2="420" y2="600" class="return"/>
+  <text x="505" y="595" class="message-text">返回uploadId</text>
+  
+  <line x1="420" y1="620" x2="760" y2="620" class="message"/>
+  <text x="590" y="615" class="message-text">保存上传任务</text>
+  
+  <line x1="420" y1="660" x2="250" y2="660" class="return"/>
+  <text x="335" y="655" class="message-text">返回uploadId</text>
+  
+  <!-- 第四部分：断点续传检查 -->
+  <text x="50" y="700" class="section">4. 断点续传检查</text>
+  
+  <!-- 检查已上传分片 -->
+  <line x1="250" y1="720" x2="420" y2="720" class="message"/>
+  <text x="335" y="715" class="message-text">检查已上传分片</text>
+  
+  <rect x="415" y="740" width="10" height="60" class="activation"/>
+  <line x1="420" y1="760" x2="760" y2="760" class="message"/>
+  <text x="590" y="755" class="message-text">查询上传进度</text>
+  
+  <line x1="760" y1="780" x2="420" y2="780" class="return"/>
+  <text x="590" y="775" class="message-text">已上传分片列表</text>
+  
+  <line x1="420" y1="820" x2="250" y2="820" class="return"/>
+  <text x="335" y="815" class="message-text">返回待上传分片</text>
+  
+  <!-- 第五部分：并发上传分片 -->
+  <text x="50" y="860" class="section">5. 并发分片上传</text>
+  
+  <!-- 上传分片循环 -->
+  <rect x="245" y="880" width="10" height="200" class="activation"/>
+  
+  <!-- 上传单个分片 -->
+  <line x1="250" y1="900" x2="420" y2="900" class="message"/>
+  <text x="335" y="895" class="message-text">uploadPart(分片1)</text>
+  
+  <rect x="415" y="920" width="10" height="40" class="activation"/>
+  <line x1="420" y1="940" x2="590" y2="940" class="message"/>
+  <text x="505" y="935" class="message-text">上传分片到S3</text>
+  
+  <line x1="590" y1="960" x2="420" y2="960" class="return"/>
+  <text x="505" y="955" class="message-text">上传成功</text>
+  
+  <line x1="420" y1="980" x2="250" y2="980" class="return"/>
+  <text x="335" y="975" class="message-text">分片上传完成</text>
+  
+  <!-- 更新进度 -->
+  <line x1="250" y1="1000" x2="420" y2="1000" class="message"/>
+  <text x="335" y="995" class="message-text">更新上传进度</text>
+  
+  <line x1="420" y1="1020" x2="760" y2="1020" class="message"/>
+  <text x="590" y="1015" class="message-text">记录分片状态</text>
+  
+  <!-- 并发上传说明 -->
+  <rect x="300" y="1040" width="200" height="30" class="note"/>
+  <text x="400" y="1060" class="note-text">重复上传剩余分片(并发)</text>
+  
+  <!-- 第六部分：合并分片 -->
+  <text x="50" y="1120" class="section">6. 分片合并</text>
+  
+  <!-- 所有分片上传完成 -->
+  <line x1="250" y1="1140" x2="420" y2="1140" class="message"/>
+  <text x="335" y="1135" class="message-text">mergeMultipartUpload()</text>
+  
+  <rect x="415" y="1160" width="10" height="80" class="activation"/>
+  <line x1="420" y1="1180" x2="590" y2="1180" class="message"/>
+  <text x="505" y="1175" class="message-text">合并所有分片</text>
+  
+  <line x1="590" y1="1200" x2="420" y2="1200" class="return"/>
+  <text x="505" y="1195" class="message-text">合并完成</text>
+  
+  <line x1="420" y1="1220" x2="760" y2="1220" class="message"/>
+  <text x="590" y="1215" class="message-text">更新文件状态</text>
+  
+  <line x1="420" y1="1260" x2="250" y2="1260" class="return"/>
+  <text x="335" y="1255" class="message-text">上传成功</text>
+  
+  <line x1="250" y1="1280" x2="90" y2="1280" class="return"/>
+  <text x="170" y="1275" class="message-text">显示上传完成</text>
+  
+  <!-- 关键特性说明 -->
+  <rect x="50" y="1310" width="900" height="30" class="note"/>
+  <text x="500" y="1330" class="note-text">关键特性：MD5秒传检查、分片断点续传、并发上传、实时进度更新、错误重试机制</text>
+</svg>

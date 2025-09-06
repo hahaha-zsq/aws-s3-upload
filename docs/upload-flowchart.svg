@@ -1,0 +1,159 @@
+<svg width="800" height="1200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>
+      .title { font: bold 18px sans-serif; text-anchor: middle; fill: #2c3e50; }
+      .box { fill: #3498db; stroke: #2980b9; stroke-width: 2; rx: 8; ry: 8; }
+      .decision { fill: #e74c3c; stroke: #c0392b; stroke-width: 2; }
+      .process { fill: #2ecc71; stroke: #27ae60; stroke-width: 2; rx: 8; ry: 8; }
+      .storage { fill: #f39c12; stroke: #e67e22; stroke-width: 2; rx: 8; ry: 8; }
+      .text { font: 12px sans-serif; text-anchor: middle; fill: white; }
+      .arrow { stroke: #34495e; stroke-width: 2; fill: none; marker-end: url(#arrowhead); }
+      .label { font: 10px sans-serif; fill: #7f8c8d; }
+    </style>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#34495e" />
+    </marker>
+  </defs>
+  
+  <!-- 标题 -->
+  <text x="400" y="30" class="title">AWS S3 分片上传流程图</text>
+  
+  <!-- 开始 -->
+  <ellipse cx="400" cy="70" rx="50" ry="25" class="box"/>
+  <text x="400" y="77" class="text">开始上传</text>
+  
+  <!-- 文件选择 -->
+  <rect x="330" y="120" width="140" height="40" class="process"/>
+  <text x="400" y="145" class="text">用户选择文件</text>
+  
+  <!-- 计算MD5 -->
+  <rect x="330" y="190" width="140" height="40" class="process"/>
+  <text x="400" y="215" class="text">计算文件MD5</text>
+  
+  <!-- 检查文件是否存在 -->
+  <polygon points="400,260 450,285 400,310 350,285" class="decision"/>
+  <text x="400" y="290" class="text">文件已存在?</text>
+  
+  <!-- 秒传成功 -->
+  <rect x="530" y="265" width="120" height="40" class="storage"/>
+  <text x="590" y="290" class="text">秒传成功</text>
+  
+  <!-- 文件分片 -->
+  <rect x="330" y="350" width="140" height="40" class="process"/>
+  <text x="400" y="375" class="text">文件分片处理</text>
+  
+  <!-- 初始化上传任务 -->
+  <rect x="300" y="420" width="200" height="40" class="box"/>
+  <text x="400" y="445" class="text">初始化分片上传任务</text>
+  
+  <!-- 检查是否有未完成任务 -->
+  <polygon points="400,490 470,515 400,540 330,515" class="decision"/>
+  <text x="400" y="520" class="text">存在未完成任务?</text>
+  
+  <!-- 获取已上传分片 -->
+  <rect x="530" y="495" width="140" height="40" class="process"/>
+  <text x="600" y="520" class="text">获取已上传分片</text>
+  
+  <!-- 创建上传队列 -->
+  <rect x="300" y="580" width="200" height="40" class="process"/>
+  <text x="400" y="605" class="text">创建待上传分片队列</text>
+  
+  <!-- 并发上传分片 -->
+  <rect x="300" y="650" width="200" height="40" class="box"/>
+  <text x="400" y="675" class="text">并发上传分片</text>
+  
+  <!-- 单个分片上传 -->
+  <rect x="100" y="720" width="140" height="40" class="process"/>
+  <text x="170" y="745" class="text">上传单个分片</text>
+  
+  <!-- 分片上传成功? -->
+  <polygon points="170,790 220,815 170,840 120,815" class="decision"/>
+  <text x="170" y="820" class="text">上传成功?</text>
+  
+  <!-- 重试上传 -->
+  <rect x="50" y="880" width="100" height="40" class="box"/>
+  <text x="100" y="905" class="text">重试上传</text>
+  
+  <!-- 更新进度 -->
+  <rect x="280" y="790" width="140" height="40" class="process"/>
+  <text x="350" y="815" class="text">更新上传进度</text>
+  
+  <!-- 所有分片完成? -->
+  <polygon points="400,870 470,895 400,920 330,895" class="decision"/>
+  <text x="400" y="900" class="text">所有分片完成?</text>
+  
+  <!-- 合并分片 -->
+  <rect x="330" y="960" width="140" height="40" class="storage"/>
+  <text x="400" y="985" class="text">合并所有分片</text>
+  
+  <!-- 上传完成 -->
+  <rect x="330" y="1030" width="140" height="40" class="box"/>
+  <text x="400" y="1055" class="text">上传完成</text>
+  
+  <!-- 更新文件列表 -->
+  <rect x="330" y="1100" width="140" height="40" class="process"/>
+  <text x="400" y="1125" class="text">更新文件列表</text>
+  
+  <!-- 结束 -->
+  <ellipse cx="400" cy="1170" rx="40" ry="25" class="box"/>
+  <text x="400" y="1177" class="text">结束</text>
+  
+  <!-- 连接线 -->
+  <line x1="400" y1="95" x2="400" y2="120" class="arrow"/>
+  <line x1="400" y1="160" x2="400" y2="190" class="arrow"/>
+  <line x1="400" y1="230" x2="400" y2="260" class="arrow"/>
+  
+  <!-- 秒传分支 -->
+  <line x1="450" y1="285" x2="530" y2="285" class="arrow"/>
+  <text x="490" y="280" class="label">是</text>
+  
+  <!-- 继续上传 -->
+  <line x1="400" y1="310" x2="400" y2="350" class="arrow"/>
+  <text x="415" y="330" class="label">否</text>
+  
+  <line x1="400" y1="390" x2="400" y2="420" class="arrow"/>
+  <line x1="400" y1="460" x2="400" y2="490" class="arrow"/>
+  
+  <!-- 断点续传分支 -->
+  <line x1="470" y1="515" x2="530" y2="515" class="arrow"/>
+  <text x="500" y="510" class="label">是</text>
+  <line x1="600" y1="535" x2="600" y2="600" class="arrow"/>
+  <line x1="600" y1="600" x2="500" y2="600" class="arrow"/>
+  
+  <!-- 新上传 -->
+  <line x1="400" y1="540" x2="400" y2="580" class="arrow"/>
+  <text x="415" y="560" class="label">否</text>
+  
+  <line x1="400" y1="620" x2="400" y2="650" class="arrow"/>
+  <line x1="300" y1="670" x2="170" y2="720" class="arrow"/>
+  <line x1="170" y1="760" x2="170" y2="790" class="arrow"/>
+  
+  <!-- 重试分支 -->
+  <line x1="120" y1="815" x2="100" y2="880" class="arrow"/>
+  <text x="90" y="850" class="label">否</text>
+  <line x1="100" y1="880" x2="100" y2="740" class="arrow"/>
+  <line x1="100" y1="740" x2="100" y2="740" class="arrow"/>
+  
+  <!-- 成功分支 -->
+  <line x1="220" y1="815" x2="280" y2="815" class="arrow"/>
+  <text x="250" y="810" class="label">是</text>
+  <line x1="350" y1="830" x2="350" y2="870" class="arrow"/>
+  <line x1="350" y1="870" x2="400" y2="870" class="arrow"/>
+  
+  <!-- 继续上传 -->
+  <line x1="330" y1="895" x2="170" y2="895" class="arrow"/>
+  <line x1="170" y1="895" x2="170" y2="760" class="arrow"/>
+  <text x="250" y="890" class="label">否</text>
+  
+  <!-- 完成分支 -->
+  <line x1="400" y1="920" x2="400" y2="960" class="arrow"/>
+  <text x="415" y="940" class="label">是</text>
+  
+  <line x1="400" y1="1000" x2="400" y2="1030" class="arrow"/>
+  <line x1="400" y1="1070" x2="400" y2="1100" class="arrow"/>
+  <line x1="400" y1="1140" x2="400" y2="1145" class="arrow"/>
+  
+  <!-- 秒传完成路径 -->
+  <line x1="590" y1="305" x2="590" y2="1125" class="arrow"/>
+  <line x1="590" y1="1125" x2="470" y2="1125" class="arrow"/>
+</svg>
