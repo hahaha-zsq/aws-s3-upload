@@ -12,6 +12,9 @@
 
 *采用分片上传、断点续传、秒传等先进技术，为大文件传输提供高效、稳定的服务*
 
+演示视频地址：[aws-s3分片、断点，秒传](https://www.bilibili.com/video/BV1qkY3zFEzt/?share_source=copy_web&vd_source=c447f1819318b0fe977ae468afb3faf6)
+
+
 ---
 
 </div>
